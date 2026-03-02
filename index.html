@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baseball Ratings Engine</title>
+    <style>
+/* Baseball Ratings Engine â€” Dark theme dashboard */
+
+:root {
+    --bg-primary: #1a1a2e;
+    --bg-secondary: #16213e;
+    --bg-card: #0f3460;
+    --text-primary: #e6e6e6;
+    --text-secondary: #a8a8b3;
+    --accent-green: #00d68f;
+    --accent-red: #ff6b6b;
+    --accent-blue: #4da8da;
+    --accent-gold: #f0c040;
+    --border: #2a2a4a;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+}
+
+header {
+    background: var(--bg-secondary);
+    border-bottom: 2px solid var(--accent-blue);
+    padding: 1rem 2rem;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+header h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--accent-blue);
+}
+
+.date {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+main {
+    max-width: 1400px;
+    margin: 1.5rem auto;
+    padding: 0 1rem;
+}
+
+/* Status bar */
+.status-bar {
+    display: flex;
+    gap: 1.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--bg-secondary);
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+/* Main ratings table */
+.ratings-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.ratings-table thead {
+    background: var(--bg-card);
+}
+
+.ratings-table th {
+    padding: 0.75rem 0.5rem;
+    text-align: center;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--accent-blue);
+    border-bottom: 2px solid var(--border);
+}
+
+.ratings-table td {
+    padding: 0.6rem 0.5rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.85rem;
+}
+
+.team-col {
+    text-align: left !important;
+    min-width: 120px;
+}
+
+.team-cell {
+    text-align: left !important;
+}
+
+.team-cell strong {
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.pitcher-info {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+/* Rating cells */
+.rating-cell {
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.separator {
+    color: var(--text-secondary);
+    margin: 0 2px;
+}
+
+.winner {
+    color: var(--accent-green);
+    font-weight: 600;
+}
+
+.loser {
+    color: var(--accent-red);
+}
+
+/* Combined column */
+.combined-col {
+    min-width: 130px;
+}
+
+.combined-cell {
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+/* Delta */
+.delta-cell {
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.positive-delta {
+    color: var(--accent-green);
+}
+
+.negative-delta {
+    color: var(--accent-red);
+}
+
+/* Wins */
+.wins-cell {
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+/* Game row hover */
+.game-row {
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.game-row:hover {
+    background: rgba(77, 168, 218, 0.1);
+}
+
+.game-row.expanded {
+    background: rgba(77, 168, 218, 0.15);
+}
+
+/* Detail row (expandable) */
+.detail-row td {
+    padding: 0;
+    background: var(--bg-card);
+}
+
+.detail-content {
+    padding: 1rem 1.5rem;
+}
+
+.detail-section {
+    margin-bottom: 1rem;
+}
+
+.detail-section h3 {
+    font-size: 0.85rem;
+    color: var(--accent-blue);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.detail-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.detail-table td,
+.detail-table th {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+    border: 1px solid var(--border);
+}
+
+.detail-table th {
+    text-align: left;
+    color: var(--text-secondary);
+}
+
+/* Error row */
+.error-row {
+    background: rgba(255, 107, 107, 0.1);
+}
+
+.error-cell {
+    color: var(--accent-red);
+    text-align: left !important;
+    font-size: 0.8rem;
+}
+
+/* No games message */
+.no-games {
+    text-align: center;
+    padding: 3rem;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+}
+
+.no-games h2 {
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.no-games pre {
+    text-align: left;
+    display: inline-block;
+    background: var(--bg-card);
+    padding: 1rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    color: var(--accent-blue);
+    margin-top: 1rem;
+}
+
+.no-games code {
+    background: var(--bg-card);
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.85rem;
+    color: var(--accent-gold);
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 1rem;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    border-top: 1px solid var(--border);
+    margin-top: 2rem;
+}
+
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>Baseball Ratings Engine</h1>
+            <span class="date">Sunday, March 01, 2026</span>
+        </div>
+    </header>
+    <main>
+
+<div class="status-bar">
+    <span>1 games loaded</span>
+    <span>Batting: 45182 rows</span>
+    <span>Pitching: 272062 rows</span>
+    <span>Trends: 27 situations</span>
+    <span>Runs: loaded</span>
+</div>
+
+
+<table class="ratings-table">
+    <thead>
+        <tr>
+            <th class="team-col">Home</th>
+            <th class="team-col">Away</th>
+            <th>Trends</th>
+            <th>Runs</th>
+            <th>SP</th>
+            <th>Bullpen</th>
+            <th>Hitting</th>
+            <th class="combined-col">Combined</th>
+            <th>Delta</th>
+            <th>Wins</th>
+        </tr>
+    </thead>
+    <tbody>
+        
+        
+        <tr class="game-row" onclick="toggleDetail(this)">
+            <td class="team-cell">
+                <strong>SEA</strong>
+                <div class="pitcher-info">Castillo, Luis (rhp)</div>
+            </td>
+            <td class="team-cell">
+                <strong>DET</strong>
+                <div class="pitcher-info">Skubal, Tarik (lhp)</div>
+            </td>
+            <td class="rating-cell">
+                <span class="winner">
+                    9.08
+                </span>
+                <span class="separator">/</span>
+                <span class="loser">
+                    7.64
+                </span>
+            </td>
+            <td class="rating-cell">
+                <span class="loser">
+                    6.68
+                </span>
+                <span class="separator">/</span>
+                <span class="winner">
+                    7.87
+                </span>
+            </td>
+            <td class="rating-cell">
+                <span class="winner">
+                    8.49
+                </span>
+                <span class="separator">/</span>
+                <span class="loser">
+                    7.90
+                </span>
+            </td>
+            <td class="rating-cell">
+                <span class="winner">
+                    6.48
+                </span>
+                <span class="separator">/</span>
+                <span class="loser">
+                    6.25
+                </span>
+            </td>
+            <td class="rating-cell">
+                <span class="winner">
+                    4.87
+                </span>
+                <span class="separator">/</span>
+                <span class="loser">
+                    4.45
+                </span>
+            </td>
+            <td class="combined-cell">
+                <span class="winner">
+                    7.175
+                </span>
+                <span class="separator">/</span>
+                <span class="loser">
+                    7.095
+                </span>
+            </td>
+            <td class="delta-cell positive-delta">
+                +0.080
+            </td>
+            <td class="wins-cell">
+                <span class="winner">4</span>
+                -
+                <span class="loser">1</span>
+            </td>
+        </tr>
+        <!-- Expandable detail row -->
+        <tr class="detail-row" style="display: none;">
+            <td colspan="10">
+                <div class="detail-content">
+                    <div class="detail-section">
+                        <h3>Category Deltas (Home - Away)</h3>
+                        <table class="detail-table">
+                            <tr>
+                                
+                                <td class="positive-delta">
+                                    <strong>trends</strong><br>
+                                    +1.440
+                                </td>
+                                
+                                <td class="negative-delta">
+                                    <strong>runs</strong><br>
+                                    -1.188
+                                </td>
+                                
+                                <td class="positive-delta">
+                                    <strong>sp</strong><br>
+                                    +0.593
+                                </td>
+                                
+                                <td class="positive-delta">
+                                    <strong>bullpen</strong><br>
+                                    +0.231
+                                </td>
+                                
+                                <td class="positive-delta">
+                                    <strong>hitting</strong><br>
+                                    +0.417
+                                </td>
+                                
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="detail-section">
+                        <h3>Weights</h3>
+                        <table class="detail-table">
+                            <tr>
+                                <td>Trends: 5.0</td>
+                                <td>Runs: 25.0</td>
+                                <td>SP: 35.0</td>
+                                <td>Bullpen: 12.5</td>
+                                <td>Hitting: 15.0</td>
+                                <td><strong>Total: 92.5</strong></td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    
+                    <div class="detail-section">
+                        <h3>Pitcher IP</h3>
+                        <table class="detail-table">
+                            <tr>
+                                <th>Castillo, Luis</th>
+                                
+                                <td>fullsp: 180.2</td>
+                                
+                                <td>last18days: 7.1</td>
+                                
+                                <td>last42days: 29.1</td>
+                                
+                            </tr>
+                            <tr>
+                                <th>Skubal, Tarik</th>
+                                
+                                <td>fullsp: 195.1</td>
+                                
+                                <td>last18days: 6.0</td>
+                                
+                                <td>last42days: 29.1</td>
+                                
+                            </tr>
+                        </table>
+                    </div>
+                    
+
+                    <div class="detail-section">
+                        <h3>Game Info</h3>
+                        <p>Night | Weather: clear</p>
+                    </div>
+                </div>
+            </td>
+        </tr>
+        
+        
+    </tbody>
+</table>
+
+
+    </main>
+    <footer>
+        <p>Data: Fangraphs + TeamRankings | Config: RATINGS_CONFIG_v3.xlsx</p>
+    </footer>
+
+<script>
+function toggleDetail(gameRow) {
+    const detailRow = gameRow.nextElementSibling;
+    if (detailRow && detailRow.classList.contains('detail-row')) {
+        detailRow.style.display = detailRow.style.display === 'none' ? 'table-row' : 'none';
+        gameRow.classList.toggle('expanded');
+    }
+}
+</script>
+
+</body>
+</html>
